@@ -111,9 +111,12 @@ def vis_log_single(dfs, args_list, y, table_y, x):
         source=data_table_source, columns=columns,
         width=600, height=850)
 
+    # NOTE: callback_policy, callback_throttle are not supported for
+    # callbacks written in Python.
     window_slider = bokeh.models.Slider(
         start=1, end=100, value=1, step=1,
-        title='window size', callback_policy='mouseup')
+        title='window size')
+
     ids = np.random.permutation(256)
     def update(attr, old, new):
         raw_indices = data_table_source.selected['1d']['indices']
