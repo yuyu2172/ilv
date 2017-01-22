@@ -3,11 +3,14 @@ import bokeh.charts
 import bokeh.models.layouts
 import os
 import os.path as osp
-from ilv.utils import filter_dict, list_of_dict_to_dict_of_list
+from ilv.utils import filter_dict, list_of_dict_to_dict_of_list, moving_average_1d
 import numpy as np
 
 
-def find_valid_keys(args_list, black_list=['outdir']):
+np.random.seed(1)
+
+
+def find_valid_keys(args_list, black_list=['outdir', 'gpu']):
     keys = args_list[0].keys()
     valid_keys = []
     for key in keys:
@@ -53,94 +56,123 @@ def vis_log_single(dfs, args_list, y, table_y, x):
         y (string)
         x (string)
     """
-    # TODO: use multiple lines instead of line
-    # https://github.com/bokeh/bokeh/issues/2682
-    # update graph property in callback
+    # prepare and preprocess dataframes
     dict_args = list_of_dict_to_dict_of_list(args_list)
     valid_keys = find_valid_keys(args_list)
     dict_args = filter_dict(dict_args, valid_keys)
     labels = find_labels(args_list, valid_keys)
 
-
     # add hover functionality
     hover = bokeh.models.HoverTool(
             tooltips=[
                 ("y", "$y"),
-                ("label", "@desc"),
+                ("label", "@legend"),
             ])
-    p = bokeh.plotting.figure(tools=[hover])
+    p = bokeh.plotting.figure(tools=[hover], plot_width=1200, plot_height=850)
 
-    ls = []
-    off_props = dict(line_width=2, line_alpha=0.2)
-    on_props = dict(line_width=2, line_alpha=0.7)
-    ids = np.random.permutation(256)
     table_y_values = []
+    xs = []
+    ys = []
+    descs = []
     for i, (args, label) in enumerate(zip(args_list, labels)):
         # get df from a result
         tmp = dfs
         for key, val in args.items():
             tmp = tmp[tmp[key] == val]
 
-        # this is necessary to make hover visualization
-        source = bokeh.plotting.ColumnDataSource(
-            {'x': tmp[x].values.tolist(),
-             'y': tmp[y].values.tolist(),
-             'desc': [label] * len(tmp)})
-        legend = None
-        l = p.line('x', 'y', source=source, legend=legend,
-                   color=bokeh.palettes.Inferno256[ids[i]], **on_props)
+        xs.append(tmp[x].values.tolist())
+        ys.append(tmp[y].values.tolist())
+        descs.append([label] * len(tmp))
         table_y_values.append(tmp[table_y].values.tolist()[0])
-        ls.append(l)
+    
+    # build empty multi line graph
+    multi_l_source = bokeh.plotting.ColumnDataSource(
+        {'xs': [], 'ys': [], 'descs': [], 'legend': []})
+    multi_l = p.multi_line(
+        xs='xs', ys='ys', source=multi_l_source, legend='legend')
 
     # build datatable
-    columns = [
-        bokeh.models.widgets.TableColumn(field='label', title='label'),
-        bokeh.models.widgets.TableColumn(field=table_y, title=table_y)]
-    checks = [0] * len(labels)
-    source = bokeh.models.ColumnDataSource(
-        {'label': labels, table_y: table_y_values, 'check': checks})
-    source.callback = bokeh.models.CustomJS(
-        args=dict(source=source),
-        code="""
-                var indices = source.selected["1d"].indices
-                var checks = source.get('data')['check'];
-                for (var i = 0; i < checks.length; i++) {
-                    checks[i] = 0;
-                }
-                for (var i = 0; i < indices.length; i++) {
-                    checks[i] = 1;
-                }
-        """)
+    # build columns
+    columns = []
+    for key in valid_keys + [table_y]:
+        columns.append(
+            bokeh.models.widgets.TableColumn(field=key, title=key))
+    # build data for the table
+    data = {}
+    for args in args_list:
+        for key in valid_keys:
+            if key not in data:
+                data[key] = []
+            data[key].append(args[key])
+    data[table_y] = table_y_values
+    data['index'] = range(len(args_list))
+    data_table_source = bokeh.models.ColumnDataSource(data)
     data_table = bokeh.models.widgets.DataTable(
-        source=source, columns=columns,
-        width=400, height=200, editable=True)
+        source=data_table_source, columns=columns,
+        width=600, height=850)
 
+    window_slider = bokeh.models.Slider(
+        start=1, end=100, value=1, step=1,
+        title='window size', callback_policy='mouseup')
+    ids = np.random.permutation(256)
     def update(attr, old, new):
-        for i, l in enumerate(ls):
-            for key in sliders_dict.keys():
-                min_value = sliders_dict[key]['min'].value
-                max_value = sliders_dict[key]['max'].value
-                if (min_value <= args_list[i][key] and
-                        max_value >= args_list[i][key]):
-                    l.glyph.line_alpha = on_props['line_alpha']
-                else:
-                    ls[i].glyph.line_alpha = off_props['line_alpha']
-    for slider in sliders:
-        slider.on_change('value', update)
+        raw_indices = data_table_source.selected['1d']['indices']
+
+        # after sorting, the order of index changes
+        reordered_keys = data_table_source.data['index']
+        selected_indices = []
+        for idx in raw_indices:
+            selected_indices.append(reordered_keys[idx])
+        
+        # get list of selected line data
+        selected_xs = []
+        selected_ys = []
+        selected_descs = []
+        selected_labels = []
+        for idx in selected_indices:
+            selected_xs.append(xs[idx])
+            selected_ys.append(
+                moving_average_1d(ys[idx], window_slider.value))
+            selected_descs.append(descs[idx])
+            selected_labels.append(labels[idx])
+        
+        # get colors
+        selected_colors = []
+        colors = bokeh.palettes.Inferno256
+        for i in range(len(selected_indices)):
+            selected_colors.append(colors[ids[i]])
+
+        # set data dict
+        data = dict(xs=selected_xs, ys=selected_ys, descs=selected_descs,
+                    line_color=selected_colors,
+                    legend=selected_labels)
+        multi_l.data_source.data = data
+
+        # set color 
+        # https://groups.google.com/a/continuum.io/forum/#!topic/bokeh/MMxjMK84n5M
+        multi_l.glyph.line_color = 'line_color'
+
+    data_table_source.on_change('selected', update)
+    window_slider.on_change('value', update)
 
     # add tools
+    p.add_tools(bokeh.models.BoxZoomTool())
+    p.add_tools(bokeh.models.ResizeTool())
     p.add_tools(bokeh.models.SaveTool())
     p.add_tools(bokeh.models.WheelZoomTool())
-
-    # add widgets
-    inputs = bokeh.layouts.widgetbox(*sliders)
-
+    #p.add_tools(bokeh.models.WheelPanTool())
+    p.add_tools(bokeh.models.RedoTool())
+    p.add_tools(bokeh.models.ResetTool())
+    p.add_tools(bokeh.models.UndoTool())
+    p.add_tools(bokeh.models.ZoomOutTool())
+    p.add_tools(bokeh.models.ZoomInTool())
 
     # build layout
-    layout = bokeh.layouts.row(data_table, p)
+    sliders = bokeh.layouts.widgetbox(window_slider)
+    layout = bokeh.layouts.gridplot(
+        [[data_table, p],
+         [sliders]], sizing_mode='fixed')
     bokeh.io.curdoc().add_root(layout)
-    #bokeh.charts.save(layout)
-    return ls
 
 
 def vis_log(dfs, x, ys, table_ys, args_list):

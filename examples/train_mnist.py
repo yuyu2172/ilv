@@ -10,6 +10,7 @@ from chainer.training import extensions
 import os.path as osp
 import os
 
+import ilv
 
 # Network definition
 class MLP(chainer.Chain):
@@ -28,39 +29,25 @@ class MLP(chainer.Chain):
         return self.l3(h2)
 
 
-def main():
-    parser = argparse.ArgumentParser(description='Chainer example: MNIST')
-    parser.add_argument('--batchsize', '-b', type=int, default=100,
-                        help='Number of images in each mini-batch')
-    parser.add_argument('--epoch', '-e', type=int, default=20,
-                        help='Number of sweeps over the dataset to train')
-    parser.add_argument('--gpu', '-g', type=int, default=-1,
-                        help='GPU ID (negative value indicates CPU)')
-    parser.add_argument('--outdir', '-o', default='result',
-                        help='Directory to output the result')
-    parser.add_argument('--resume', '-r', default='',
-                        help='Resume the training from snapshot')
-    parser.add_argument('--unit', '-u', type=int, default=1000,
-                        help='Number of units')
-    args = parser.parse_args()
-
-    print('GPU: {}'.format(args.gpu))
-    print('# unit: {}'.format(args.unit))
-    print('# Minibatch-size: {}'.format(args.batchsize))
-    print('# epoch: {}'.format(args.epoch))
+@ilv.train.log_args
+def main(batchsize, epoch, gpu, outdir, resume, unit):
+    print('GPU: {}'.format(gpu))
+    print('# unit: {}'.format(unit))
+    print('# Minibatch-size: {}'.format(batchsize))
+    print('# epoch: {}'.format(epoch))
     print('')
 
-    if not osp.exists(args.outdir):
-        os.makedirs(args.outdir)
-    with open(osp.join(args.outdir, 'args'), 'w') as f:
-        f.write(str({'unit': args.unit}))
+    #if not osp.exists(outdir):
+    #    os.makedirs(outdir)
+    #with open(osp.join(outdir, 'args'), 'w') as f:
+    #    f.write(str({'unit': unit}))
 
     # Set up a neural network to train
     # Classifier reports softmax cross entropy loss and accuracy at every
     # iteration, which will be used by the PrintReport extension below.
-    model = L.Classifier(MLP(args.unit, 10))
-    if args.gpu >= 0:
-        chainer.cuda.get_device(args.gpu).use()  # Make a specified GPU current
+    model = L.Classifier(MLP(unit, 10))
+    if gpu >= 0:
+        chainer.cuda.get_device(gpu).use()  # Make a specified GPU current
         model.to_gpu()  # Copy the model to the GPU
 
     # Setup an optimizer
@@ -70,23 +57,23 @@ def main():
     # Load the MNIST dataset
     train, test = chainer.datasets.get_mnist()
 
-    train_iter = chainer.iterators.SerialIterator(train, args.batchsize)
-    test_iter = chainer.iterators.SerialIterator(test, args.batchsize,
+    train_iter = chainer.iterators.SerialIterator(train, batchsize)
+    test_iter = chainer.iterators.SerialIterator(test, batchsize,
                                                  repeat=False, shuffle=False)
 
     # Set up a trainer
-    updater = training.StandardUpdater(train_iter, optimizer, device=args.gpu)
-    trainer = training.Trainer(updater, (args.epoch, 'epoch'), out=args.outdir)
+    updater = training.StandardUpdater(train_iter, optimizer, device=gpu)
+    trainer = training.Trainer(updater, (epoch, 'epoch'), out=outdir)
 
     # Evaluate the model with the test dataset for each epoch
-    trainer.extend(extensions.Evaluator(test_iter, model, device=args.gpu))
+    trainer.extend(extensions.Evaluator(test_iter, model, device=gpu))
 
     # Dump a computational graph from 'loss' variable at the first iteration
     # The "main" refers to the target link of the "main" optimizer.
     trainer.extend(extensions.dump_graph('main/loss'))
 
     # Take a snapshot at each epoch
-    trainer.extend(extensions.snapshot(), trigger=(args.epoch, 'epoch'))
+    trainer.extend(extensions.snapshot(), trigger=(epoch, 'epoch'))
 
     # Write a log of evaluation statistics for each epoch
     trainer.extend(extensions.LogReport())
@@ -103,12 +90,27 @@ def main():
     # Print a progress bar to stdout
     trainer.extend(extensions.ProgressBar())
 
-    if args.resume:
+    if resume:
         # Resume from a snapshot
-        chainer.serializers.load_npz(args.resume, trainer)
+        chainer.serializers.load_npz(resume, trainer)
 
     # Run the training
     trainer.run()
 
 if __name__ == '__main__':
-    main()
+    parser = argparse.ArgumentParser(description='Chainer example: MNIST')
+    parser.add_argument('--batchsize', '-b', type=int, default=100,
+                        help='Number of images in each mini-batch')
+    parser.add_argument('--epoch', '-e', type=int, default=20,
+                        help='Number of sweeps over the dataset to train')
+    parser.add_argument('--gpu', '-g', type=int, default=-1,
+                        help='GPU ID (negative value indicates CPU)')
+    parser.add_argument('--outdir', '-o', default='result',
+                        help='Directory to output the result')
+    parser.add_argument('--resume', '-r', default='',
+                        help='Resume the training from snapshot')
+    parser.add_argument('--unit', '-u', type=int, default=1000,
+                        help='Number of units')
+    args = parser.parse_args()
+    main(batchsize=args.batchsize, epoch=args.epoch, gpu=args.gpu,
+         outdir=args.outdir, resume=args.resume, unit=args.unit)

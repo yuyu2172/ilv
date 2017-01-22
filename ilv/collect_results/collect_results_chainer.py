@@ -28,7 +28,6 @@ def collect_results_chainer(result_base):
                 dfs.append(df)
                 args_list.append(args)
                 count += 1
-    print df
     dfs = pd.concat(dfs)
     print('finished collecting')
     return dfs, args_list
