@@ -9,6 +9,8 @@ import numpy as np
 
 np.random.seed(1)
 
+#TODO: make multiple figures, if it is impossible to combine multiple plots on one fiugre
+# If
 
 def find_valid_keys(args_list, black_list=['outdir', 'gpu']):
     keys = args_list[0].keys()
@@ -46,7 +48,7 @@ def find_labels(args_list, valid_keys):
 
 
 # this code is based on bokeh/examples/app/line_on_off.py
-def vis_log_single(dfs, args_list, y, table_y, x):
+def vis_log_single(dfs, args_list, ys, table_y, x):
     """Merge all results on values ys 
 
     Args:
@@ -70,18 +72,22 @@ def vis_log_single(dfs, args_list, y, table_y, x):
             ])
     p = bokeh.plotting.figure(tools=[hover], plot_width=1200, plot_height=850)
 
+    # ys_dict == {string (y): List(Serial Data)}
     table_y_values = []
     xs = []
-    ys = []
+    ys_dict = {}
     descs = []
+    for y in ys:
+        ys_dict[y] = []
     for i, (args, label) in enumerate(zip(args_list, labels)):
         # get df from a result
         tmp = dfs
         for key, val in args.items():
             tmp = tmp[tmp[key] == val]
-
+        for y in ys:
+            ys_dict[y].append(tmp[y].values.tolist())
         xs.append(tmp[x].values.tolist())
-        ys.append(tmp[y].values.tolist())
+        #ys_dict.append(tmp[y].values.tolist())
         descs.append([label] * len(tmp))
         table_y_values.append(tmp[table_y].values.tolist()[0])
     
@@ -117,6 +123,9 @@ def vis_log_single(dfs, args_list, y, table_y, x):
         start=1, end=100, value=1, step=1,
         title='window size')
 
+    radio_button = bokeh.models.widgets.RadioButtonGroup(
+        labels=ys, active=0)
+
     ids = np.random.permutation(256)
     def update(attr, old, new):
         raw_indices = data_table_source.selected['1d']['indices']
@@ -134,10 +143,11 @@ def vis_log_single(dfs, args_list, y, table_y, x):
         selected_labels = []
         for idx in selected_indices:
             selected_xs.append(xs[idx])
-            selected_ys.append(
-                moving_average_1d(ys[idx], window_slider.value))
             selected_descs.append(descs[idx])
             selected_labels.append(labels[idx])
+            y = ys[radio_button.active]
+            selected_ys.append(
+                moving_average_1d(ys_dict[y][idx], window_slider.value))
         
         # get colors
         selected_colors = []
@@ -146,17 +156,20 @@ def vis_log_single(dfs, args_list, y, table_y, x):
             selected_colors.append(colors[ids[i]])
 
         # set data dict
-        data = dict(xs=selected_xs, ys=selected_ys, descs=selected_descs,
+        
+        data = dict(xs=selected_xs, ys=selected_ys,
+                    descs=selected_descs,
                     line_color=selected_colors,
                     legend=selected_labels)
         multi_l.data_source.data = data
-
         # set color 
         # https://groups.google.com/a/continuum.io/forum/#!topic/bokeh/MMxjMK84n5M
         multi_l.glyph.line_color = 'line_color'
 
+
     data_table_source.on_change('selected', update)
     window_slider.on_change('value', update)
+    radio_button.on_change('active', update)
 
     # add tools
     p.add_tools(bokeh.models.BoxZoomTool())
@@ -172,13 +185,15 @@ def vis_log_single(dfs, args_list, y, table_y, x):
 
     # build layout
     sliders = bokeh.layouts.widgetbox(window_slider)
+    radio_button_widget = bokeh.layouts.widgetbox(radio_button)
     layout = bokeh.layouts.gridplot(
         [[data_table, p],
-         [sliders]], sizing_mode='fixed')
+         [sliders, radio_button_widget]], sizing_mode='fixed')
     bokeh.io.curdoc().add_root(layout)
 
 
 def vis_log(dfs, x, ys, table_ys, args_list):
     # visualization
-    for y, table_y in zip(ys, table_ys):
-        vis_log_single(dfs, args_list, y, table_y, x)
+#    for y, table_y in zip(ys, table_ys):
+#        vis_log_single(dfs, args_list, y, table_y, x)
+    vis_log_single(dfs, args_list, ys, table_ys[0], x)
