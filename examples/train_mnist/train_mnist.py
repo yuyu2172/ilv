@@ -105,7 +105,7 @@ if __name__ == '__main__':
                         help='Number of sweeps over the dataset to train')
     parser.add_argument('--gpu', '-g', type=int, default=-1,
                         help='GPU ID (negative value indicates CPU)')
-    parser.add_argument('--outdir', '-o', default='result',
+    parser.add_argument('--outdir', '-o', default='result/default',
                         help='Directory to output the result')
     parser.add_argument('--resume', '-r', default='',
                         help='Resume the training from snapshot')
