@@ -34,7 +34,7 @@ def interactive(result_base):
     if int(var) == 0:
         return result_base
     elif 1 <= int(var) <= len(child_dirs):
-        return child_dirs[int(var) - 1]
+        return osp.join(result_base, child_dirs[int(var) - 1])
     else:
         raise ValueError('invalid input')
 
