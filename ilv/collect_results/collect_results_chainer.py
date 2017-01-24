@@ -1,6 +1,7 @@
 import pandas as pd
 import os
 import os.path as osp
+from ilv.collect_results.interactive import interactive
 
 
 def collect_results_chainer(result_base, table_ys):
@@ -30,3 +31,8 @@ def collect_results_chainer(result_base, table_ys):
     dfs = pd.concat(dfs)
     print('finished collecting')
     return dfs, args_list
+
+
+def collect_results_chainer_interactive(result_base, table_ys):
+    result_base = interactive(result_base)
+    return collect_results_chainer(result_base, table_ys)
