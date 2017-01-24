@@ -53,7 +53,7 @@ def vis_log(dfs, xs, ys, table_ys, args_list):
         table_ys (dictionary of strings): key is name of y to display on
             dictionary. The value is how to turn the vector value into
             scalar ({'min', 'max'}).
-        x (string)
+        xs (list of strings)
     """
     # prepare and preprocess dataframes
     dict_args = list_of_dict_to_dict_of_list(args_list)
