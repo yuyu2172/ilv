@@ -31,7 +31,7 @@ def interactive(result_base):
             child_dirs.append(dir_)
 
     var = raw_input("Please enter something: ")
-    if var == 0:
+    if int(var) == 0:
         return result_base
     elif 1 <= int(var) <= len(child_dirs):
         return child_dirs[int(var) - 1]
