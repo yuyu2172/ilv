@@ -1,7 +1,8 @@
 import bokeh.charts
 import bokeh.models.layouts
-from ilv.utils import filter_dict, list_of_dict_to_dict_of_list, moving_average_1d
 import numpy as np
+
+from ilv.utils import filter_dict, list_of_dict_to_dict_of_list, moving_average_1d
 
 
 np.random.seed(1)
@@ -143,6 +144,7 @@ def vis_log(dfs, xs, ys, table_ys, args_list):
 
     colors_10_ids = np.random.permutation(10)
     colors_255_ids = np.random.permutation(255)
+
     def update(attr, old, new):
         raw_indices = data_table_source.selected['1d']['indices']
 

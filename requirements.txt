@@ -1,0 +1,3 @@
+pandas
+numpy>=1.11
+bokeh>=0.12.4

@@ -1,6 +1,7 @@
-import pandas as pd
 import os
 import os.path as osp
+import pandas as pd
+
 from ilv.collect_results.interactive import interactive
 
 
