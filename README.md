@@ -1,6 +1,6 @@
 # Interactive Log Visualizer
 
-This library supports interactive visualization of logs produced from training of neural networks.
+This library supports interactive visualization of training logs of neural networks.
 More specifically, this targets the scenario where you need to visualize tens and hundreds of experiment results.
 
 This library supports two features.
