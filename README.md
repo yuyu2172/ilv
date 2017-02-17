@@ -8,6 +8,12 @@ This library supports two features.
 + Interactive visualization of logs
 + Some helper functions to prepare train logs so that visualization can start. This part is framework dependent.
 
+# Installation
+
+```
+pip install ilv
+```
+
 
 ## Dependencies
 
