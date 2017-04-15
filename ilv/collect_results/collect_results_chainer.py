@@ -1,8 +1,15 @@
+import json
 import os
 import os.path as osp
 import pandas as pd
 
 from ilv.collect_results.interactive import interactive
+
+
+def read_json(path):
+    with open(path, 'r') as f:
+        j = json.load(f)
+    return pd.DataFrame(j)
 
 
 def collect_results_chainer(result_base, table_ys):
@@ -17,7 +24,7 @@ def collect_results_chainer(result_base, table_ys):
             if len(logs) != 1:
                 continue
             log = logs[0]
-            df = pd.read_json(osp.join(root, log))
+            df = read_json(osp.join(root, log))
             df = df.interpolate()
             with open(osp.join(root, 'args'), 'r') as f:
                 l = f.read()
