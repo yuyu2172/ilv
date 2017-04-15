@@ -29,7 +29,6 @@ class MLP(chainer.Chain):
         return self.l3(h2)
 
 
-@ilv.train.log_args
 def main(batchsize, epoch, gpu, outdir, resume, unit):
     print('GPU: {}'.format(gpu))
     print('# unit: {}'.format(unit))
@@ -37,10 +36,10 @@ def main(batchsize, epoch, gpu, outdir, resume, unit):
     print('# epoch: {}'.format(epoch))
     print('')
 
-    #if not osp.exists(outdir):
-    #    os.makedirs(outdir)
-    #with open(osp.join(outdir, 'args'), 'w') as f:
-    #    f.write(str({'unit': unit}))
+    if not osp.exists(outdir):
+        os.makedirs(outdir)
+    with open(osp.join(outdir, 'args'), 'w') as f:
+        f.write(str({'unit': unit}))
 
     # Set up a neural network to train
     # Classifier reports softmax cross entropy loss and accuracy at every

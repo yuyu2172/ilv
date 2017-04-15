@@ -2,3 +2,5 @@ ilv.egg-info/
 *.pyc
 build/
 dist/
+
+.cache/

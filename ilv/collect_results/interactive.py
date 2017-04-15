@@ -1,43 +1,50 @@
 import os
-import os.path as osp
+import pickle
 import re
 import subprocess
 
 
 def count_directories(base):
-    return len([osp.isdir(osp.join(base, dir_)) for dir_ in os.listdir(base)])
+    return sum([os.path.isdir(os.path.join(base, dir_)) for dir_ in os.listdir(base)])
 
 
-def interactive(result_base):
+def interactive(result_base, selected_option=None):
     print('============= Set Result Base ==============')
     print('0:   set result_base as current directory')
 
-    child_dirs = []
+    options = []  # List[(string, dict)]
     for dir_ in os.listdir(result_base):
-        child_dir = osp.join(result_base, dir_)
-        if osp.isdir(child_dir):
-            try:
-                devnull = open(os.devnull, 'w')
-                cmd = 'git log -n 1 --pretty=format:%s_____%ai {}'.format(dir_)
-                commit_info = subprocess.check_output([cmd], shell=True, stderr=devnull)
-                commit_info = re.sub('[^a-zA-Z0-9, \s, _, \-, :]', '', commit_info)
-            except:
-                commit_info = None
-            print('{}:  {}  n_data={} {}'.format(
-                len(child_dirs) + 1,
-                dir_,
-                count_directories(child_dir),
-                commit_info))
-            child_dirs.append(dir_)
+        child_dir = os.path.join(result_base, dir_)
+        if os.path.isdir(child_dir):
+            pkl_fn = os.path.join(child_dir, 'settings.pkl')
+            if os.path.exists(pkl_fn):
+                with open(pkl_fn, 'rb') as f:
+                    logs = pickle.load(f)
+                options.append((child_dir, logs))
+            else:
+                empty_logs = {
+                    'create_time': None,
+                    'message': None}
+                options.append((child_dir, empty_logs))
 
-    var = raw_input("Please enter something: ")
-    if int(var) == 0:
+    # sort (from the newest to the oldest)
+    options = sorted(options, key=lambda x: x[1]['create_time'], reverse=True)
+
+    for i, option in enumerate(options):
+        print('{}: {}  create_time={}  message={}  n_data={}'.format(
+            i + 1 ,
+            option[0],
+            option[1]['create_time'],
+            option[1]['message'],
+            count_directories(option[0])
+        ))
+
+    if selected_option is None:
+        selected_option = int(raw_input("Please enter something: "))
+
+    if selected_option == 0:
         return result_base
-    elif 1 <= int(var) <= len(child_dirs):
-        return osp.join(result_base, child_dirs[int(var) - 1])
+    elif 1 <= selected_option <= len(options):
+        return options[selected_option - 1][0]
     else:
         raise ValueError('invalid input')
-
-
-if __name__ == '__main__':
-    print interactive('result')
