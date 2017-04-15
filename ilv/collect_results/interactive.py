@@ -33,7 +33,7 @@ def interactive(result_base, selected_option=None):
     for i, option in enumerate(options):
         print('{}: {}  create_time={}  message={}  n_data={}'.format(
             i + 1 ,
-            option[0],
+            os.path.split(option[0])[1],
             option[1]['create_time'],
             option[1]['message'],
             count_directories(option[0])
