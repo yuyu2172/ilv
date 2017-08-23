@@ -9,6 +9,7 @@ from chainer import training
 from chainer.training import extensions
 import os.path as osp
 import os
+import pickle
 
 import ilv
 
@@ -30,16 +31,12 @@ class MLP(chainer.Chain):
 
 
 def main(batchsize, epoch, gpu, out, resume, unit):
-    print('GPU: {}'.format(gpu))
-    print('# unit: {}'.format(unit))
-    print('# Minibatch-size: {}'.format(batchsize))
-    print('# epoch: {}'.format(epoch))
-    print('')
-
     if not osp.exists(out):
         os.makedirs(out)
-    with open(osp.join(out, 'args'), 'w') as f:
-        f.write(str({'unit': unit}))
+    args = locals()
+    with open(osp.join(out, 'settings.pkl'), 'wb') as f:
+        pickle.dump(args, f)
+    print(args)
 
     # Set up a neural network to train
     # Classifier reports softmax cross entropy loss and accuracy at every

@@ -2,6 +2,7 @@ import os
 import pickle
 import re
 import subprocess
+import warnings
 
 
 def count_directories(base):
@@ -20,6 +21,11 @@ def interactive(result_base, selected_option=None):
             if os.path.exists(pkl_fn):
                 with open(pkl_fn, 'rb') as f:
                     logs = pickle.load(f)
+                if 'create_time' not in logs:
+                    logs['create_time'] = None
+                    warnings.warn('create_time not in settings.pkl')
+                if 'message' not in logs:
+                    logs['message'] = None
                 options.append((child_dir, logs))
             else:
                 empty_logs = {
