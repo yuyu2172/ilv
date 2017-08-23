@@ -8,7 +8,7 @@ from ilv.utils import filter_dict, list_of_dict_to_dict_of_list, moving_average_
 np.random.seed(1)
 
 
-def find_valid_keys(args_list, black_list=['outdir', 'gpu']):
+def find_valid_keys(args_list, black_list=['out', 'gpu']):
     keys = args_list[0].keys()
     valid_keys = []
     for key in keys:

@@ -29,16 +29,16 @@ class MLP(chainer.Chain):
         return self.l3(h2)
 
 
-def main(batchsize, epoch, gpu, outdir, resume, unit):
+def main(batchsize, epoch, gpu, out, resume, unit):
     print('GPU: {}'.format(gpu))
     print('# unit: {}'.format(unit))
     print('# Minibatch-size: {}'.format(batchsize))
     print('# epoch: {}'.format(epoch))
     print('')
 
-    if not osp.exists(outdir):
-        os.makedirs(outdir)
-    with open(osp.join(outdir, 'args'), 'w') as f:
+    if not osp.exists(out):
+        os.makedirs(out)
+    with open(osp.join(out, 'args'), 'w') as f:
         f.write(str({'unit': unit}))
 
     # Set up a neural network to train
@@ -62,7 +62,7 @@ def main(batchsize, epoch, gpu, outdir, resume, unit):
 
     # Set up a trainer
     updater = training.StandardUpdater(train_iter, optimizer, device=gpu)
-    trainer = training.Trainer(updater, (epoch, 'epoch'), out=outdir)
+    trainer = training.Trainer(updater, (epoch, 'epoch'), out=out)
 
     # Evaluate the model with the test dataset for each epoch
     trainer.extend(extensions.Evaluator(test_iter, model, device=gpu))
@@ -104,7 +104,7 @@ if __name__ == '__main__':
                         help='Number of sweeps over the dataset to train')
     parser.add_argument('--gpu', '-g', type=int, default=-1,
                         help='GPU ID (negative value indicates CPU)')
-    parser.add_argument('--outdir', '-o', default='result/default',
+    parser.add_argument('--out', '-o', default='result/default',
                         help='Directory to output the result')
     parser.add_argument('--resume', '-r', default='',
                         help='Resume the training from snapshot')
@@ -112,4 +112,4 @@ if __name__ == '__main__':
                         help='Number of units')
     args = parser.parse_args()
     main(batchsize=args.batchsize, epoch=args.epoch, gpu=args.gpu,
-         outdir=args.outdir, resume=args.resume, unit=args.unit)
+         out=args.out, resume=args.resume, unit=args.unit)
