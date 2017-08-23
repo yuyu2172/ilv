@@ -7,7 +7,6 @@ import chainer.functions as F
 import chainer.links as L
 from chainer import training
 from chainer.training import extensions
-import os.path as osp
 import os
 import pickle
 
@@ -31,10 +30,10 @@ class MLP(chainer.Chain):
 
 
 def main(batchsize, epoch, gpu, out, resume, unit):
-    if not osp.exists(out):
+    if not os.path.exists(out):
         os.makedirs(out)
     args = locals()
-    with open(osp.join(out, 'settings.pkl'), 'wb') as f:
+    with open(os.path.join(out, 'settings.pkl'), 'wb') as f:
         pickle.dump(args, f)
     print(args)
 
