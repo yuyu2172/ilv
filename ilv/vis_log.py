@@ -1,5 +1,6 @@
 import bokeh.charts
 import bokeh.models.layouts
+import collections
 import numpy as np
 import warnings
 
@@ -102,7 +103,8 @@ def filter_dataframes(dfs, xs, ys, table_ys, args_list, valid_keys):
     # ys_dict == {string (y): List(Serial Data)}
     xs_dict = {x: [] for x in xs}
     ys_dict = {y: [] for y in ys}
-    tables = {key: [] for key in list(table_ys.keys()) + valid_keys}
+    tables = collections.OrderedDict(
+        [(key, []) for key in ['index'] + valid_keys + list(table_ys.keys())])
     for i, args in enumerate(args_list):
         # get df from a result
         tmp = dfs
