@@ -34,7 +34,7 @@ def interactive(result_base, selected_option=None):
                 options.append((child_dir, empty_logs))
 
     # sort (from the newest to the oldest)
-    options = sorted(options, key=lambda x: x[1]['create_time'], reverse=True)
+    options = sorted(sorted(options), key=lambda x: x[1]['create_time'], reverse=True)
 
     for i, option in enumerate(options):
         print('{}: {}  create_time={}  message={}  n_data={}'.format(
