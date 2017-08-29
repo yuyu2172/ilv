@@ -179,8 +179,7 @@ def vis_log(dfs, xs, ys=None, table_ys=None, args_list=None):
         source=data_table_source,
         columns=columns,
         width=600, height=825)
-    # NOTE: callback_policy, callback_throttle are not supported for
-    # callbacks written in Python.
+    # Sliders, buttons, menus, legends
     window_slider = bokeh.models.Slider(
         start=1, end=101, value=1, step=10,
         title='window size')
@@ -195,13 +194,11 @@ def vis_log(dfs, xs, ys=None, table_ys=None, args_list=None):
     # 3. Start configuring user-interaction
     def update(attr, old, new):
         raw_indices = data_table_source.selected['1d']['indices']
-
         # after sorting, the order of index changes
         reordered_keys = data_table_source.data['index']
         selected_indices = []
         for idx in raw_indices:
             selected_indices.append(reordered_keys[idx])
-
         # get list of selected line data
         selected_xs = []
         selected_ys = []
@@ -225,17 +222,15 @@ def vis_log(dfs, xs, ys=None, table_ys=None, args_list=None):
             color_indices = colors_255_indices
         for i in range(len(selected_indices)):
             selected_colors.append(colors[color_indices[i]])
-
         # set data dict
-        data = dict(xs=selected_xs, ys=selected_ys,
-                    descs=selected_descs,
-                    line_color=selected_colors,
-                    legend=selected_identifiers)
-        multi_l.data_source.data = data
+        multi_l.data_source.data = dict(
+            xs=selected_xs, ys=selected_ys,
+            descs=selected_descs,
+            line_color=selected_colors,
+            legend=selected_identifiers)
         # set color
         # https://groups.google.com/a/continuum.io/forum/#!topic/bokeh/MMxjMK84n5M
         multi_l.glyph.line_color = 'line_color'
-
         p.legend.location = menu[legend_button.active]
     data_table_source.on_change('selected', update)
     window_slider.on_change('value', update)
