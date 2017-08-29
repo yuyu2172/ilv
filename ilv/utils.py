@@ -5,6 +5,7 @@ import math
 import multiprocessing
 import os
 import pandas as pd
+import random
 import subprocess
 
 
@@ -64,6 +65,7 @@ def run_experiments(options, base_cmd, base_dir, gpus):
     date = dt.strftime('%Y_%m_%d_%H_%M')
     date_dir = os.path.join(base_dir, date)
     options_list = dict_of_list_to_list_of_dict(options)
+    random.shuffle(options_list)
 
     if isinstance(gpus, (tuple, list)):
         _run_experiments_multiprocess(options_list, base_cmd, date_dir, gpus)
