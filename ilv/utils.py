@@ -65,9 +65,9 @@ def run_experiments(options_list, base_cmd, date_dir, indices=None):
         subprocess.call(cmd, shell=True)
 
 
-def run_experiments_multiprocess(options, base_cmd,
+def run_experiments_multiprocess(options_list, base_cmd,
                                  date_dir, gpus):
-    options_list_all = dict_of_list_to_list_of_dict(options)
+    options_list_all = options_list
     indices = list(range(len(options_list_all)))
     options_list_split = split_list_equally(options_list_all, len(gpus))
     indices_split = split_list_equally(indices, len(gpus))
