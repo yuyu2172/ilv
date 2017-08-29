@@ -45,7 +45,7 @@ def find_labels(args_list, valid_keys):
 
 
 # this code is based on bokeh/examples/app/line_on_off.py
-def vis_log(dfs, xs, ys, table_ys, args_list):
+def vis_log(dfs, xs, ys=None, table_ys=None, args_list=None):
     """Merge all results on values ys
 
     Args:
@@ -58,6 +58,8 @@ def vis_log(dfs, xs, ys, table_ys, args_list):
         args_list (list of dictionary): dictionary consists of keys and values
             that uniquely identify the plot.
     """
+    if ys is None:
+        ys = table_ys.keys()
     # prepare and preprocess dataframes
     dict_args = list_of_dict_to_dict_of_list(args_list)
     valid_keys = find_valid_keys(args_list)
