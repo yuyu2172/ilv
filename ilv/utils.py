@@ -1,3 +1,4 @@
+from datetime import datetime
 from itertools import izip
 from itertools import product
 import math
@@ -49,23 +50,30 @@ def split_list_equally(l, n):
     return [l[i:i+size] for i in range(0, len(l), size)]
 
 
-def run_experiments(options_list, base_cmd, date_dir, indices=None):
-    for i, opts in enumerate(options_list):
-        if indices is None:
-            index = i
-        else:
-            index = indices[i]
-        cmd = base_cmd
-        out = os.path.join(date_dir, 'iter_{}'.format(index))
-        cmd += ' --out {} '.format(out)
+def run_experiments(options, base_cmd, base_dir, gpus):
+    """
 
-        for key, val in opts.items():
-            cmd += ' --{} {} '.format(key, val)
-        print(cmd)
-        subprocess.call(cmd, shell=True)
+    Args:
+        options (dict of lists)
+        base_cmd (string)
+        base_dir (string)
+        gpus (list of ints or int)
+
+    """
+    dt = datetime.now()
+    date = dt.strftime('%Y_%m_%d_%H_%M')
+    date_dir = os.path.join(base_dir, date)
+    options_list = dict_of_list_to_list_of_dict(options)
+
+    if isinstance(gpus, (tuple, list)):
+        _run_experiments_multiprocess(options_list, base_cmd, date_dir, gpus)
+    elif isinstance(gpus, int):
+        for options in options_list:
+            options.update({'gpu': gpus})
+        _run_experiments(options_list, base_cmd, date_dir)
 
 
-def run_experiments_multiprocess(options_list, base_cmd,
+def _run_experiments_multiprocess(options_list, base_cmd,
                                  date_dir, gpus):
     options_list_all = options_list
     indices = list(range(len(options_list_all)))
@@ -79,10 +87,26 @@ def run_experiments_multiprocess(options_list, base_cmd,
     for gpu, options_list, indices in zip(
             gpus, options_list_split, indices_split):
         p = multiprocessing.Process(
-            target=run_experiments,
+            target=_run_experiments,
             args=(options_list, base_cmd, date_dir, indices))
         p.start()
         ps.append(p)
 
     for p in ps:
         p.join()
+
+
+def _run_experiments(options_list, base_cmd, date_dir, indices=None):
+    for i, opts in enumerate(options_list):
+        if indices is None:
+            index = i
+        else:
+            index = indices[i]
+        cmd = base_cmd
+        out = os.path.join(date_dir, 'iter_{}'.format(index))
+        cmd += ' --out {} '.format(out)
+
+        for key, val in opts.items():
+            cmd += ' --{} {} '.format(key, val)
+        print(cmd)
+        subprocess.call(cmd, shell=True)
