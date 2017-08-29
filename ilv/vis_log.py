@@ -58,7 +58,8 @@ def get_identifiers(args_list, valid_keys):
     for args in args_list:
         identifier = ''
         for key in valid_keys:
-            identifier += '{}={},'.format(key, args[key])
+            if key in args:
+                identifier += '{}={},'.format(key, args[key])
         identifiers.append(identifier)
     return identifiers
 
@@ -124,7 +125,10 @@ def filter_dataframes(dfs, xs, ys, table_ys, args_list, valid_keys):
             else:
                 raise ValueError
         for key in valid_keys:
-            tables[key].append(args[key])
+            if key in args:
+                tables[key].append(args[key])
+            else:
+                tables[key].append(None)
 
     tables['index'] = list(range(len(args_list)))
     return xs_dict, ys_dict, tables
