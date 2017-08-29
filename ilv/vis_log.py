@@ -1,3 +1,5 @@
+import warnings
+
 import bokeh.charts
 import bokeh.models.layouts
 import numpy as np
@@ -48,13 +50,13 @@ def vis_log(dfs, xs, ys, table_ys, args_list):
 
     Args:
         dfs (list of pd.DataFrame)
-        args_list (list of dictionary): dictionary consists of keys and values
-            that uniquely identify the plot.
+        xs (list of strings)
         ys (list of strings)
         table_ys (dictionary of strings): key is name of y to display on
             dictionary. The value is how to turn the vector value into
             scalar ({'min', 'max'}).
-        xs (list of strings)
+        args_list (list of dictionary): dictionary consists of keys and values
+            that uniquely identify the plot.
     """
     # prepare and preprocess dataframes
     dict_args = list_of_dict_to_dict_of_list(args_list)
@@ -84,8 +86,12 @@ def vis_log(dfs, xs, ys, table_ys, args_list):
     for i, (args, label) in enumerate(zip(args_list, labels)):
         # get df from a result
         tmp = dfs
+
         for key, val in args.items():
-            tmp = tmp[tmp[key] == val]
+            if val is None:
+                tmp = tmp[tmp[key].isnull()]
+            else:
+                tmp = tmp[tmp[key] == val]
         for x in xs:
             xs_dict[x].append(tmp[x].values.tolist())
         for y in ys:
