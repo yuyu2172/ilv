@@ -1,6 +1,7 @@
 import bokeh.charts
 import bokeh.models.layouts
 import numpy as np
+import warnings
 
 from ilv.utils import filter_dict
 from ilv.utils import list_of_dict_to_dict_of_list
@@ -32,6 +33,9 @@ def get_valid_keys(args_list, black_list=['out', 'gpu']):
             for args in args_list:
                 if cur is None:
                     cur = args[key]
+                if key not in args:
+                    warnings.warn('{} not in args={}'.format(key, args))
+                    continue
                 if cur != args[key]:
                     valid_keys.append(key)
                     break
