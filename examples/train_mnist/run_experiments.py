@@ -1,15 +1,10 @@
 import fire
 
 from datetime import datetime
-from itertools import product
-from itertools import izip
 import os
-import subprocess
 
-
-# Dictionary of lists to list of dictionaries
-def dl_to_ld(dicts):
-    return list(dict(izip(dicts, x)) for x in product(*dicts.itervalues()))
+from ilv.utils import run_experiments
+from ilv.utils import dict_of_list_to_list_of_dict
 
 
 def main(gpu=-1):
@@ -23,22 +18,13 @@ def main(gpu=-1):
     }
     base_dir = 'result'
     ##########################################################################
-
-    options_list = dl_to_ld(options)
     dt = datetime.now()
     date = dt.strftime('%Y_%m_%d_%H_%M')
+    date_dir = os.path.join(base_dir, date)
 
-    for i, opts in enumerate(options_list):
-        cmd = base_cmd
-        out = os.path.join(base_dir, date, 'iter_{}'.format(i))
-        cmd += ' --out {} '.format(out)
-
-        for key, val in opts.items():
-            cmd += ' --{} {} '.format(key, val)
-        print(cmd)
-        subprocess.call(cmd, shell=True)
+    options_list = dict_of_list_to_list_of_dict(options)
+    run_experiments(options_list, base_cmd, date_dir)
 
 
 if __name__ == '__main__':
     fire.Fire(main)
-

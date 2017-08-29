@@ -33,8 +33,7 @@ def dict_of_list_to_list_of_dict(dicts):
     return list(dict(izip(dicts, x)) for x in product(*dicts.itervalues()))
 
 
-def run_experiments(options, base_cmd, date_dir):
-    options_list = dict_of_list_to_list_of_dict(options)
+def run_experiments(options_list, base_cmd, date_dir):
     for i, opts in enumerate(options_list):
         cmd = base_cmd
         out = os.path.join(date_dir, 'iter_{}'.format(i))
