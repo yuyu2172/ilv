@@ -137,7 +137,8 @@ def filter_dataframes(dfs, xs, ys, table_ys, args_list, valid_keys):
 
 
 # this code is based on bokeh/examples/app/line_on_off.py
-def vis_log(dfs, xs, ys=None, table_ys=None, args_list=None):
+def vis_log(dfs, xs, ys=None, table_ys=None, args_list=None,
+            ignore_keys=[], table_width=600):
     """Merge all results on values ys
 
     Args:
@@ -149,6 +150,8 @@ def vis_log(dfs, xs, ys=None, table_ys=None, args_list=None):
             scalar ({'min', 'max'}).
         args_list (list of dictionary): dictionary consists of keys and values
             that uniquely identify the plot.
+        ignore_kes (list of strings): Keys to stop showing on table.
+        table_width (int): Width of table. The default value is 600.
 
     """
     # This function can be divided into five parts.
@@ -165,6 +168,7 @@ def vis_log(dfs, xs, ys=None, table_ys=None, args_list=None):
 
     if ys is None:
         ys = table_ys.keys()
+    ignore_keys += ['index']
 
     # 1. prepare and preprocess dataframes
     dict_args = list_of_dict_to_dict_of_list(args_list)
@@ -175,7 +179,7 @@ def vis_log(dfs, xs, ys=None, table_ys=None, args_list=None):
         dfs, xs, ys, table_ys, args_list, valid_keys)
 
     # 2. Construct elements
-    p = bokeh.plotting.figure(plot_width=1200, plot_height=825)
+    p = bokeh.plotting.figure(plot_width=1800 - table_width, plot_height=825)
     # build empty multi line graph
     multi_l_source = bokeh.plotting.ColumnDataSource(
         {'xs': [], 'ys': [], 'descs': [], 'legend': []})
@@ -183,12 +187,12 @@ def vis_log(dfs, xs, ys=None, table_ys=None, args_list=None):
         xs='xs', ys='ys', source=multi_l_source, legend='legend')
     # build datatable
     columns = [bokeh.models.widgets.TableColumn(field=key, title=key) for
-               key in tables.keys()]
+               key in tables.keys() if key not in ignore_keys]
     data_table_source = bokeh.models.ColumnDataSource(tables)
     data_table = bokeh.models.widgets.DataTable(
         source=data_table_source,
         columns=columns,
-        width=600, height=825)
+        width=table_width, height=825)
     # Sliders, buttons, menus, legends
     window_slider = bokeh.models.Slider(
         start=1, end=101, value=1, step=10,
