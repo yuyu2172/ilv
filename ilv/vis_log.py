@@ -201,7 +201,7 @@ def vis_log(dfs, xs, ys=None, table_ys=None, args_list=None,
         labels=xs, active=0, width=600)
     ys_button = bokeh.models.widgets.RadioButtonGroup(
         labels=ys, active=0, width=600)
-    menu = ['top_right', 'top_left', 'bottom_right', 'bottom_left']
+    menu = ['off', 'top_right', 'top_left', 'bottom_right', 'bottom_left']
     legend_button = bokeh.models.widgets.RadioButtonGroup(
         labels=menu, active=0, width=600)
 
@@ -245,7 +245,11 @@ def vis_log(dfs, xs, ys=None, table_ys=None, args_list=None,
         # set color
         # https://groups.google.com/a/continuum.io/forum/#!topic/bokeh/MMxjMK84n5M
         multi_l.glyph.line_color = 'line_color'
-        p.legend.location = menu[legend_button.active]
+        if menu[legend_button.active] == 'off':
+            # TODO: This can be improved
+            multi_l.data_source.data.pop('legend')
+        else:
+            p.legend.location = menu[legend_button.active]
     data_table_source.on_change('selected', update)
     window_slider.on_change('value', update)
     ys_button.on_change('active', update)
