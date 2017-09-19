@@ -1,4 +1,4 @@
-import bokeh.charts
+import bokeh.plotting
 import bokeh.models.layouts
 import collections
 import numpy as np
